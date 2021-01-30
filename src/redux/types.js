@@ -1,0 +1,2 @@
+export const SELECT_ROWS = 'SELECT_ROWS'
+export const UNSELECT_ROWS = 'UNSELECT_ROWS'

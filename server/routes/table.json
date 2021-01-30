@@ -1,0 +1,14 @@
+{
+  "firstEntry": 21,
+  "pageSize": 10,
+  "columnOrder": [],
+  "hiddenColumns": [],
+  "columnResizing": {},
+  "pageIndex": 0,
+  "sorting": [
+    {
+      "id": "username",
+      "desc": true
+    }
+  ]
+}
