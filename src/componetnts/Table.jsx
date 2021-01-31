@@ -9,6 +9,7 @@ import { ReactComponent as Visibility } from "../icons/visibility.svg";
 
 import { connect } from "react-redux";
 import { setAllselectedRows, unselectedRows } from "../redux/action";
+import { myfetch } from '../utils/fetch'
 
 import {
   defaultSizeFirstColumn,
@@ -34,7 +35,6 @@ function DefaultColumnFilter({
   column: { filterValue, preFilteredRows, setFilter },
 }) {
   const count = preFilteredRows.length;
-
   return (
     <input
       value={filterValue || ""}
@@ -64,7 +64,7 @@ const getDraggableStyles = (
   // styles we need to apply on draggables
 });
 
-let firstEntry = 0;
+let firstEntry = true;  // флаг первичного рендеринга 
 
 function Table({
   columns,
@@ -137,59 +137,43 @@ function Table({
     [columns, state.columnResizing.columnWidths]
   );
 
-  // console.log(">>>", sortingColumns);
+  const getSettingTable = () => {
+    myfetch('http://localhost:5000/getSettingsTable', 'GET')
+      .then((response) => response.json())
+      .then((data) => {     
+        console.log("Server", data);
+        if (data.pageSize >= 0) setPageSize(data.pageSize);
+        if (data.columnOrder && data.columnOrder.length)
+          setColumnOrder(data.columnOrder);
+        if (data.hiddenColumns && data.hiddenColumns.length)
+          setHiddenColumns(data.hiddenColumns);
+        if (Object.keys(data.columnResizing).length > 0)
+          setResizeColumns(data.columnResizing);
+        if (data.pageIndex > -1) setControlledPageIndex(data.pageIndex);
+        if (data.sorting && data.sorting.length > 0)
+          setSortingColumns(data.sorting);
+      }).then(() => {
+        firstEntry = false;  // флаг первого входа 
+      })
+      .catch((err) => console.log(err));
+  }
 
-  useEffect(() => {
-    const getSettingTable = () => {
-      const requestOptions = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json;charset=utf-8",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          firstEntry: firstEntry,
-          pageSize: state.pageSize,
-          columnOrder: state.columnOrder,
-          hiddenColumns: state.hiddenColumns,
-          columnResizing: state.columnResizing.columnWidths,
-          pageIndex: state.pageIndex,
-          sorting: state.sortBy,
-        }),
-      };
+  useEffect(()=>getSettingTable(), [])   // GET -запрос после перезагрузки страницы
 
-      fetch("http://localhost:5000/table/", requestOptions)
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("Server", data);
-          if (data.pageSize >= 0) setPageSize(data.pageSize);
-          if (data.columnOrder && data.columnOrder.length)
-            setColumnOrder(data.columnOrder);
-          if (data.hiddenColumns && data.hiddenColumns.length)
-            setHiddenColumns(data.hiddenColumns);
-          if (Object.keys(data.columnResizing).length > 0)
-            setResizeColumns(data.columnResizing);
-          if (data.pageIndex > -1) setControlledPageIndex(data.pageIndex);
-          if (data.sorting && data.sorting.length > 0)
-            setSortingColumns(data.sorting);
-        })
-        .catch((err) => console.log(err));
-      firstEntry++;
-    };
-    getSettingTable();
-  }, [
-    columns,
-    state.pageSize,
-    state.columnOrder,
-    setPageSize,
-    setColumnOrder,
-    state.hiddenColumns,
-    setHiddenColumns,
-    state.columnResizing.columnWidths,
-    setResizeColumns,
-    state.pageIndex,
-    state.sortBy,
-  ]);
+  useEffect(() => {     // POST -запрос после изменения состояния таблицы
+    const tableSettings = {
+      sorting: state.sortBy,
+      pageSize: state.pageSize,
+      pageIndex: state.pageIndex,
+      columnOrder: state.columnOrder,
+      hiddenColumns: state.hiddenColumns,
+      columnResizing: state.columnResizing.columnWidths,
+    }
+    if (!firstEntry) {  // условие чтобы не отправлялся запрос после первого рендера
+      myfetch('http://localhost:5000/postSettingsTable', 'POST', tableSettings)
+    }
+  }, [state.pageSize, state.columnOrder, state.hiddenColumns, state.columnResizing.columnWidths, state.pageIndex, state.sortBy])
+
 
   const selectedRows = (row) => {
     const idx = allSelectedRows.findIndex((el) => el.id === row.id);
@@ -335,8 +319,8 @@ function Table({
                                             {column.isSorted ? (
                                               <ArrowDown />
                                             ) : (
-                                              <ArrowUp />
-                                            )}
+                                                <ArrowUp />
+                                              )}
                                           </span>
                                         )}
                                       </div>
@@ -349,9 +333,8 @@ function Table({
                                         e.stopPropagation();
                                       }}
                                       {...column.getResizerProps()}
-                                      className={`resizer ${
-                                        column.isResizing ? "isResizing" : ""
-                                      }`}
+                                      className={`resizer ${column.isResizing ? "isResizing" : ""
+                                        }`}
                                     />
                                     {provided.placeholder}
                                   </th>
@@ -379,8 +362,8 @@ function Table({
                       return i === 0 ? (
                         <td {...cell.getCellProps()}>{showCheckbox(row)}</td>
                       ) : (
-                        <td {...cell.getCellProps()}>{cell.render("Cell")}</td>
-                      );
+                          <td {...cell.getCellProps()}>{cell.render("Cell")}</td>
+                        );
                     })}
                   </tr>
                 );

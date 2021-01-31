@@ -1,14 +1,20 @@
 {
-  "firstEntry": 21,
+  "sorting": [],
   "pageSize": 10,
-  "columnOrder": [],
-  "hiddenColumns": [],
-  "columnResizing": {},
   "pageIndex": 0,
-  "sorting": [
-    {
-      "id": "username",
-      "desc": true
-    }
-  ]
+  "columnOrder": [
+    "col0",
+    "address.zipcode",
+    "name",
+    "email",
+    "phone",
+    "username",
+    "website",
+    "address.street",
+    "address.suite"
+  ],
+  "hiddenColumns": [],
+  "columnResizing": {
+    "address.zipcode": 529
+  }
 }

@@ -66,12 +66,6 @@ function App() {
     getData();
   }, []);
 
-  // useEffect(()=>console.log("Alldata", dataTable) , [dataTable])
-
-  // const columns = React.useMemo(
-  //   () => 
-  //   []
-  // );
   const updateColumns = async () => {
     try{
       const response = await fetch('http://localhost:5000/columns')
